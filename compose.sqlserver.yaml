@@ -1,0 +1,22 @@
+# Configuration indépendante : docker compose --env-file .env.sqlserver.local -f compose.sqlserver.yaml up -d
+name: art2rue
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      # À définir explicitement après acceptation de la licence Microsoft.
+      ACCEPT_EULA: ${MSSQL_ACCEPT_EULA:?Acceptation explicite de la licence requise}
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Mot de passe administrateur requis}
+    ports:
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q 'SELECT 1' -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+volumes:
+  sqlserver_data:
